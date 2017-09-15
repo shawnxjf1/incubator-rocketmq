@@ -107,6 +107,7 @@ public class ClientRemotingProcessor implements NettyRequestProcessor {
         return null;
     }
 
+    //commentByXjf  重要-有变化时候broker通知客户端consumer进行rebalance。
     public RemotingCommand notifyConsumerIdsChanged(ChannelHandlerContext ctx, RemotingCommand request) throws RemotingCommandException {
         try {
             final NotifyConsumerIdsChangedRequestHeader requestHeader =

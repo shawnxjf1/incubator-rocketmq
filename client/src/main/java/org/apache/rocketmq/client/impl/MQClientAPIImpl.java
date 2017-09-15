@@ -551,6 +551,7 @@ public class MQClientAPIImpl {
         throw new MQBrokerException(response.getCode(), response.getRemark());
     }
 
+    //CommentByxjf 拉取消息，拉取消息有异步和同步的差别<br>
     public PullResult pullMessage(//
         final String addr, //
         final PullMessageRequestHeader requestHeader, //
@@ -584,6 +585,7 @@ public class MQClientAPIImpl {
         final PullCallback pullCallback//
     ) throws RemotingException, InterruptedException {
         this.remotingClient.invokeAsync(addr, request, timeoutMillis, new InvokeCallback() {
+            //CommentByXjf   responseFuture参数是 invokeAsync()设置的<br>
             @Override
             public void operationComplete(ResponseFuture responseFuture) {
                 RemotingCommand response = responseFuture.getResponseCommand();
@@ -847,6 +849,7 @@ public class MQClientAPIImpl {
         this.remotingClient.invokeOneway(MixAll.brokerVIPChannel(this.clientConfig.isVipChannelEnabled(), addr), request, timeoutMillis);
     }
 
+    // 通过netty的RPC发送<Br>
     public int sendHearbeat(//
         final String addr, //
         final HeartbeatData heartbeatData, //

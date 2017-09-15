@@ -257,7 +257,9 @@ public abstract class RebalanceImpl {
                 break;
             }
             case CLUSTERING: {
+                //commentByXjf  获取此队列下的所有topic，topic的订阅信息<br>
                 Set<MessageQueue> mqSet = this.topicSubscribeInfoTable.get(topic);
+                //commentByXjf 对整个consumerGroup的队列进行划分<br>
                 List<String> cidAll = this.mQClientFactory.findConsumerIdList(topic, consumerGroup);
                 if (null == mqSet) {
                     if (!topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
@@ -327,6 +329,15 @@ public abstract class RebalanceImpl {
         }
     }
 
+    /**
+     当负载均衡时，更新 消息处理队列
+     *  * - 移除 在processQueueTable && 不存在于 mqSet 里的消息队列
+     *:  * - 增加 不在processQueueTable && 存在于mqSet 里的消息队列     *
+     * @param topic
+     * @param mqSet
+     * @param isOrder
+     * @return
+     */
     private boolean updateProcessQueueTableInRebalance(final String topic, final Set<MessageQueue> mqSet, final boolean isOrder) {
         boolean changed = false;
 
@@ -419,6 +430,7 @@ public abstract class RebalanceImpl {
             prev.setDropped(true);
             this.removeUnnecessaryMessageQueue(mq, prev);
             log.info("Fix Offset, {}, remove unnecessary mq, {} Droped: {}", consumerGroup, mq, droped);
+            //运行日志：PullMessageServiceScheduledThread - Fix Offset, account_consumer_group, remove unnecessary mq, MessageQueue [topic=fs-er-notify, brokerName=broker-b, queueId=4] Droped: true
         }
     }
 

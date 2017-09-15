@@ -98,10 +98,12 @@ public class MQClientInstance {
     private final ConcurrentMap<String/* Topic */, TopicRouteData> topicRouteTable = new ConcurrentHashMap<String, TopicRouteData>();
     private final Lock lockNamesrv = new ReentrantLock();
     private final Lock lockHeartbeat = new ReentrantLock();
+    //FIXME brokerAddrTable broker地址列表
     private final ConcurrentMap<String/* Broker Name */, HashMap<Long/* brokerId */, String/* address */>> brokerAddrTable =
         new ConcurrentHashMap<String, HashMap<Long, String>>();
     private final ConcurrentMap<String/* Broker Name */, HashMap<String/* address */, Integer>> brokerVersionTable =
         new ConcurrentHashMap<String, HashMap<String, Integer>>();
+    //commentByXjf newSingleThreadScheduledExecutor通常用于做定时任务.scheduleAtFixRate()<br>
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
@@ -234,8 +236,10 @@ public class MQClientInstance {
                     // Start various schedule tasks
                     this.startScheduledTask();
                     // Start pull service
+                    //commentByXjf 启动了pullMessageService线程去拉取队列<br>
                     this.pullMessageService.start();
                     // Start rebalance service
+                    // 消费端负载均衡 -> 该服务很重要。
                     this.rebalanceService.start();
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
@@ -254,6 +258,7 @@ public class MQClientInstance {
         }
     }
 
+    //commentByXjf 定时拉取NameServerAddr
     private void startScheduledTask() {
         if (null == this.clientConfig.getNamesrvAddr()) {
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
@@ -326,6 +331,8 @@ public class MQClientInstance {
     public void updateTopicRouteInfoFromNameServer() {
         Set<String> topicList = new HashSet<String>();
 
+        //根据consumerTable 和 producerTable来更新 topicRouteInfo
+        //FIXME   producerTable consumerTable是干嘛用的。<br>
         // Consumer
         {
             Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();
@@ -470,6 +477,7 @@ public class MQClientInstance {
         }
     }
 
+    //FIXME 动态调整线程池没有看懂<br>
     public void adjustThreadPool() {
         Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();
         while (it.hasNext()) {
@@ -511,6 +519,7 @@ public class MQClientInstance {
 
     private void sendHeartbeatToAllBroker() {
         final HeartbeatData heartbeatData = this.prepareHeartbeatData();
+        //FIXME 为什么producerDataSet也需要在client端存放呢?
         final boolean producerEmpty = heartbeatData.getProducerDataSet().isEmpty();
         final boolean consumerEmpty = heartbeatData.getConsumerDataSet().isEmpty();
         if (producerEmpty && consumerEmpty) {
@@ -586,6 +595,7 @@ public class MQClientInstance {
 
     public boolean updateTopicRouteInfoFromNameServer(final String topic, boolean isDefault, DefaultMQProducer defaultMQProducer) {
         try {
+            //FIXME try lock 干嘛用的<br>
             if (this.lockNamesrv.tryLock(LOCK_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
                 try {
                     TopicRouteData topicRouteData;
@@ -683,6 +693,7 @@ public class MQClientInstance {
                 consumerData.setConsumeType(impl.consumeType());
                 consumerData.setMessageModel(impl.messageModel());
                 consumerData.setConsumeFromWhere(impl.consumeFromWhere());
+                //commentByXjf RebalancePushImpl.把版本号和队列信息放在subscriptionData()，通过心跳发送给broker.
                 consumerData.getSubscriptionDataSet().addAll(impl.subscriptions());
                 consumerData.setUnitMode(impl.isUnitMode());
 
@@ -844,6 +855,7 @@ public class MQClientInstance {
             return false;
         }
 
+        //FIXME 为什么consumergroup 存放在client端，比如订货通定义了3个group，link_App_group,accoutn_group等，这些都会注册到consumerTable中。
         MQConsumerInner prev = this.consumerTable.putIfAbsent(group, consumer);
         if (prev != null) {
             log.warn("the consumer group[" + group + "] exist already.");

@@ -258,6 +258,7 @@ public class BrokerController {
             // TODO remove in future
             final long initialDelay = UtilAll.computNextMorningTimeMillis() - System.currentTimeMillis();
             final long period = 1000 * 60 * 60 * 24;
+            //FIXME scheduledExecutorService为newSingleThreadScheduledExecutor 可以跑很多任务么？
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
@@ -426,6 +427,7 @@ public class BrokerController {
         /**
          * ConsumerManageProcessor
          */
+        //commentByXjf 在服务端根据Group来获取消费者列表。
         ConsumerManageProcessor consumerManageProcessor = new ConsumerManageProcessor(this);
         this.remotingServer.registerProcessor(RequestCode.GET_CONSUMER_LIST_BY_GROUP, consumerManageProcessor, this.consumerManageExecutor);
         this.remotingServer.registerProcessor(RequestCode.UPDATE_CONSUMER_OFFSET, consumerManageProcessor, this.consumerManageExecutor);

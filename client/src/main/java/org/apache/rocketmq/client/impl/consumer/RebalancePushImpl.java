@@ -55,6 +55,7 @@ public class RebalancePushImpl extends RebalanceImpl {
         SubscriptionData subscriptionData = this.subscriptionInner.get(topic);
         long newVersion = System.currentTimeMillis();
         log.info("{} Rebalance changed, also update version: {}, {}", topic, subscriptionData.getSubVersion(), newVersion);
+        //commentByXjf 通过日期做版本号控制，请求时候如果版本号不对的话拉取不到消息，则需要重新获取订阅信息，使用最新的订阅版本号。
         subscriptionData.setSubVersion(newVersion);
         // notify broker
         this.getmQClientFactory().sendHeartbeatToAllBrokerWithLock();

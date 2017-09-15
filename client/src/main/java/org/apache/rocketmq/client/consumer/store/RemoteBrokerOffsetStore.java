@@ -170,6 +170,7 @@ public class RemoteBrokerOffsetStore implements OffsetStore {
             this.offsetTable.remove(mq);
             log.info("remove unnecessary messageQueue offset. group={}, mq={}, offsetTableSize={}", this.groupName, mq,
                 offsetTable.size());
+            //日志打印：remove unnecessary messageQueue offset. mq=MessageQueue [topic=fs-er-notify, brokerName=broker-b, queueId=4], offsetTableSize=10
         }
     }
 

@@ -65,6 +65,7 @@ public class ProcessQueue {
         return (System.currentTimeMillis() - this.lastPullTimestamp) > PULL_MAX_IDLE_TIME;
     }
 
+    //FIXME 怎么判断ExpireMsg的<br>
     /**
      * @param pushConsumer
      */
@@ -79,6 +80,7 @@ public class ProcessQueue {
             try {
                 this.lockTreeMap.readLock().lockInterruptibly();
                 try {
+                    //FIXME here 没有弄明白<br>
                     if (!msgTreeMap.isEmpty() && System.currentTimeMillis() - Long.parseLong(MessageAccessor.getConsumeStartTimeStamp(msgTreeMap.firstEntry().getValue())) > pushConsumer.getConsumeTimeout() * 60 * 1000) {
                         msg = msgTreeMap.firstEntry().getValue();
                     } else {

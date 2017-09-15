@@ -53,6 +53,7 @@ public class AllocateMessageQueueAveragely implements AllocateMessageQueueStrate
 
         int index = cidAll.indexOf(currentCID);
         int mod = mqAll.size() % cidAll.size();
+        //commentByXjf 平均分配算法，是吧队列平均划分给客户端，如果mqAllSize()<cidAll.size()时averageSize=1即每一页为1个队列。
         int averageSize =
             mqAll.size() <= cidAll.size() ? 1 : (mod > 0 && index < mod ? mqAll.size() / cidAll.size()
                 + 1 : mqAll.size() / cidAll.size());

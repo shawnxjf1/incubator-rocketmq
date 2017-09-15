@@ -432,6 +432,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                             .onSuccess(DefaultMQPullConsumerImpl.this.pullAPIWrapper.processPullResult(mq, pullResult, subscriptionData));
                     }
 
+                    //FIXME 怎么调用到 onException的,我们对java语法熟悉了知道路径怎么走到这里。<br>
                     @Override
                     public void onException(Throwable e) {
                         pullCallback.onException(e);

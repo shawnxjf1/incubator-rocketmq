@@ -196,6 +196,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         this.offsetStore = offsetStore;
     }
 
+    //commentByXjf 真正的拉取消息地方，pullMessageService也是调用的这个方法。<br>
     public void pullMessage(final PullRequest pullRequest) {
         final ProcessQueue processQueue = pullRequest.getProcessQueue();
         if (processQueue.isDropped()) {
@@ -219,6 +220,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             return;
         }
 
+        //FIXME　
         long size = processQueue.getMsgCount().get();
         if (size > this.defaultMQPushConsumer.getPullThresholdForQueue()) {
             this.executePullRequestLater(pullRequest, PULL_TIME_DELAY_MILLS_WHEN_FLOW_CONTROL);
@@ -253,11 +255,12 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                             pullRequest, offset);
                     }
 
-                    pullRequest.setLockedFirst(true);
+                    pullRequest.setLockedFirst(true);//FIXME  lockFirst被锁之后呢？ 没有get到lockFirst变量干啥用，第一次就进到这里来，以后都会executePullRequestlater()么？
                     pullRequest.setNextOffset(offset);
                 }
             } else {
                 this.executePullRequestLater(pullRequest, PULL_TIME_DELAY_MILLS_WHEN_EXCEPTION);
+                // FIXME 当前队列需要在broker被lock才是被消费的，这个没有看懂<br>
                 log.info("pull message later because not locked in broker, {}", pullRequest);
                 return;
             }
@@ -335,6 +338,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
                             DefaultMQPushConsumerImpl.this.executePullRequestImmediately(pullRequest);
                             break;
+                        // 2017-08-11号 offset_Illegal 导致需要fixOffSet
                         case OFFSET_ILLEGAL:
                             log.warn("the pull request offset illegal, {} {}", //
                                 pullRequest.toString(), pullResult.toString());
@@ -366,6 +370,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 }
             }
 
+            //commentByXjf 拉消息时抛出异常时候怎么处理<br>
             @Override
             public void onException(Throwable e) {
                 if (!pullRequest.getMessageQueue().getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
@@ -539,11 +544,13 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
     public synchronized void start() throws MQClientException {
         switch (this.serviceState) {
+            //commentByXjf  启动rocketmq
             case CREATE_JUST:
                 log.info("the consumer [{}] start beginning. messageModel={}, isUnitMode={}", this.defaultMQPushConsumer.getConsumerGroup(),
                     this.defaultMQPushConsumer.getMessageModel(), this.defaultMQPushConsumer.isUnitMode());
                 this.serviceState = ServiceState.START_FAILED;
 
+                //commentByXjf 客户端new Consumer的时候必须设置<br>
                 this.checkConfig();
 
                 this.copySubscription();
@@ -569,6 +576,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 } else {
                     switch (this.defaultMQPushConsumer.getMessageModel()) {
                         case BROADCASTING:
+                            //commentByXjf 广播时候offset存储在本地<br>
                             this.offsetStore = new LocalFileOffsetStore(this.mQClientFactory, this.defaultMQPushConsumer.getConsumerGroup());
                             break;
                         case CLUSTERING:
@@ -578,6 +586,8 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                             break;
                     }
                 }
+                //commentByxjf 加载offset进度条
+                //FIXME offset不是实时刷新的需要看一下这个offset怎么设置的。
                 this.offsetStore.load();
 
                 if (this.getMessageListenerInner() instanceof MessageListenerOrderly) {
@@ -603,6 +613,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
                 mQClientFactory.start();
                 log.info("the consumer [{}] start OK.", this.defaultMQPushConsumer.getConsumerGroup());
+                //commentByXjf 启动成功后设置状态为Running
                 this.serviceState = ServiceState.RUNNING;
                 break;
             case RUNNING:
